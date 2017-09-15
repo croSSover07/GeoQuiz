@@ -13,6 +13,7 @@ class QuizActivity : AppCompatActivity() {
     private var false_button:Button?=null
     private var next_button:Button?=null
     private var prev_button:Button?=null
+    private var cheat_button:Button?=null
     private var question_text_view:TextView?=null
     private var currentIndex:Int
     private val KEY_INDEX="index"
@@ -60,6 +61,7 @@ class QuizActivity : AppCompatActivity() {
         false_button=findViewById(R.id.false_button) as Button
         next_button=findViewById(R.id.next_button) as Button
         prev_button=findViewById(R.id.prev_button) as Button
+        cheat_button=findViewById(R.id.cheat_button) as Button
         question_text_view =findViewById(R.id.question_text_view) as TextView
         true_button!!.setOnClickListener {  checkAnswer(true)}
         false_button!!.setOnClickListener {  checkAnswer(false)}
@@ -74,6 +76,11 @@ class QuizActivity : AppCompatActivity() {
             currentIndex = if( (currentIndex - 1)<0)   0 else currentIndex-1
             updateQuestion()
 
+        }
+        cheat_button!!.setOnClickListener {
+            val answerIsTrue=questionBank[currentIndex].answerTrue
+            val intent=CheatActivity.newIntent(this@QuizActivity, answerIsTrue!!)
+            startActivity(intent)
         }
 
         updateQuestion()
