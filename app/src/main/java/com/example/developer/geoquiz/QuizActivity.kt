@@ -1,5 +1,7 @@
 package com.example.developer.geoquiz
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Button
@@ -16,11 +18,11 @@ class QuizActivity : AppCompatActivity() {
     private var cheat_button:Button?=null
     private var question_text_view:TextView?=null
     private var currentIndex:Int
-    private val KEY_INDEX="index"
-
+    private var isCheater:Boolean?=null
 
 
     private var questionBank: Array<Question>
+
 
     private var answeredQuestion: Array<Boolean?>
     init {
@@ -35,11 +37,29 @@ class QuizActivity : AppCompatActivity() {
         currentIndex=0
         answeredQuestion = arrayOfNulls(questionBank.size)
 
+
+    }
+    companion object {
+        const val KEY_INDEX="index"
+        const val REQUEST_CODE_CHEAT=0
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState!!.putInt(KEY_INDEX,currentIndex)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_CODE_CHEAT) {
+            if (data == null) {
+                return;
+            }
+            isCheater = CheatActivity.wasAnswerShown(data);
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,7 +89,7 @@ class QuizActivity : AppCompatActivity() {
             if(currentIndex<questionBank.size-1){
                 currentIndex ++
                 updateQuestion()
-
+                isCheater=false
             }
         }
         prev_button!!.setOnClickListener {
@@ -80,7 +100,7 @@ class QuizActivity : AppCompatActivity() {
         cheat_button!!.setOnClickListener {
             val answerIsTrue=questionBank[currentIndex].answerTrue
             val intent=CheatActivity.newIntent(this@QuizActivity, answerIsTrue!!)
-            startActivity(intent)
+            startActivityForResult(intent, REQUEST_CODE_CHEAT)
         }
 
         updateQuestion()
@@ -94,13 +114,17 @@ class QuizActivity : AppCompatActivity() {
 
     private  fun checkAnswer(userPressedTrue:Boolean) {
         val answerIsTrue=questionBank[currentIndex].answerTrue
-        var messageResId=0;
-        if(userPressedTrue==answerIsTrue) {
-            messageResId=R.string.correct_toast
-            answeredQuestion[currentIndex]=true;
-        } else {
-            messageResId=R.string.incorrect_toast
-            answeredQuestion[currentIndex]=false;
+        var messageResId:Int
+        if(isCheater==true){
+            messageResId=R.string.judgment_toast
+        }else{
+            if(userPressedTrue==answerIsTrue) {
+                messageResId=R.string.correct_toast
+                answeredQuestion[currentIndex]=true;
+            } else {
+                messageResId=R.string.incorrect_toast
+                answeredQuestion[currentIndex]=false;
+            }
         }
         isBlockButtons()
         Toast.makeText(this@QuizActivity, messageResId ,Toast.LENGTH_SHORT).show()
