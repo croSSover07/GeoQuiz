@@ -7,7 +7,7 @@ import android.widget.TextView
 import android.widget.Toast
 
 class QuizActivity : AppCompatActivity() {
-
+  
 
     private var true_button: Button? =null
     private var false_button:Button?=null
@@ -17,7 +17,11 @@ class QuizActivity : AppCompatActivity() {
     private var currentIndex:Int
     private val KEY_INDEX="index"
 
+
+
     private var questionBank: Array<Question>
+
+    private var answeredQuestion: Array<Boolean?>
     init {
         questionBank= arrayOf(
                 Question(R.string.question_australia,true),
@@ -27,19 +31,28 @@ class QuizActivity : AppCompatActivity() {
                 Question(R.string.question_americas,true),
                 Question(R.string.question_asia,true)
                 )
+
         currentIndex=0
+        answeredQuestion = arrayOfNulls(questionBank.size)
 
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState!!.putInt(KEY_INDEX,currentIndex)
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_quiz)
-        currentIndex= savedInstanceState!![KEY_INDEX] as Int
+
+        if (savedInstanceState!=null)
+        {
+            currentIndex= savedInstanceState.get(KEY_INDEX) as Int
+        }
+
+
 
         configView()
 
@@ -56,15 +69,21 @@ class QuizActivity : AppCompatActivity() {
         true_button!!.setOnClickListener {  checkAnswer(true)}
         false_button!!.setOnClickListener {  checkAnswer(false)}
         next_button!!.setOnClickListener {
-            currentIndex = (currentIndex + 1) %  questionBank.size
-            updateQuestion()
+            if(currentIndex<questionBank.size-1){
+                currentIndex ++
+                updateQuestion()
+                isBlockButtons()
+            }
+
         }
         prev_button!!.setOnClickListener {
             currentIndex = if( (currentIndex - 1)<0)   0 else currentIndex-1
             updateQuestion()
+            isBlockButtons()
         }
 
         updateQuestion()
+        isBlockButtons()
     }
     private fun updateQuestion(){
         val question=questionBank[currentIndex].textResId
@@ -73,10 +92,31 @@ class QuizActivity : AppCompatActivity() {
 
     private  fun checkAnswer(userPressedTrue:Boolean) {
         val answerIsTrue=questionBank[currentIndex].answerTrue
-        val messageResId=if(userPressedTrue==answerIsTrue) R.string.correct_toast else R.string.incorrect_toast
+        var messageResId=0;
+        if(userPressedTrue==answerIsTrue) {
+            messageResId=R.string.correct_toast
+            answeredQuestion[currentIndex]=true;
+
+        } else {
+            messageResId=R.string.incorrect_toast
+            answeredQuestion[currentIndex]=false;
+
+
+        }
+        isBlockButtons()
         Toast.makeText(this@QuizActivity, messageResId ,Toast.LENGTH_SHORT).show()
 
+    }
+    private fun isBlockButtons(){
 
+        if( answeredQuestion[currentIndex]!=null){
+            true_button!!.isClickable=false;
+            false_button!!.isClickable=false;
+        }
+         else{
+            true_button!!.isClickable=true;
+            false_button!!.isClickable=true;
+        }
     }
 }
 
